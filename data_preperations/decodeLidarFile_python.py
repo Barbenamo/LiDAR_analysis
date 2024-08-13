@@ -10,7 +10,58 @@ import numpy as np
 from datetime import datetime
 # from mpl_toolkits.mplot3d import Axes3D # <--- This is important for 3d plotting 
 import math
-import os
+import os, sys
+
+# ANSI Escape Codes
+
+BLACK = '\033[0;30m'      
+RED = '\033[0;31m'
+GREEN = '\033[0;32m'
+BROWN = '\033[0;33m'
+BLUE = '\033[0;34m'
+PURPLE = '\033[0;35m'
+CYAN = '\033[0;36m'
+GRAY = '\033[0;37m'
+DARK_GRAY = '\033[1;30m'
+LIGHT_RED = '\033[1;31m'
+LIGHT_GREEN = '\033[1;32m'
+YELLOW = '\033[1;33m'
+LIGHT_BLUE = '\033[1;34m'
+LIGHT_PURPLE = '\033[1;35m'
+LIGHT_CYAN = '\033[1;36m'
+WHITE = '\033[1;37m'
+END = '\033[0m'
+
+
+
+def makeAnOutput(directory_name):
+    
+    try:
+        # Check if the directory exists
+        if not os.path.exists(directory_name):
+            # If the directory does not exist, create it
+            os.makedirs(directory_name)
+            print(GREEN + f"Directory '{directory_name}' has been created successfully!" + END)
+        else:
+            print(GREEN + f"{directory_name} is already in the project." + END)
+    except:
+        print(RED + f"An exception occurred creating {directory_name}" + END)
+        
+        
+        
+        
+def get_dir_names(dir_path):
+  """Gets all directory names within the specified directory path."""
+  try:
+    dir_list = os.listdir(dir_path)
+    dirs = [d for d in dir_list if os.path.isdir(os.path.join(dir_path, d))]
+    return dirs
+  except FileNotFoundError:
+    print(f"Directory '{dir_path}' not found.")
+    return []
+
+
+#----------------------------------------------------------------------------------------------------------# Romano's code above
 
 # def plotting(x,y, z):
 
@@ -120,27 +171,57 @@ def decode_lidar(file: str, extension: str = '') -> pd.DataFrame:
     data[MINUS_FILL] = data[MINUS_FILL].fillna(-1)
     return data
 
+#----------------------------------------------------------------------------------------------------------# Romano's code beneath
+
 def run(TEST_PATH):
-   
+    
     empty = pd.DataFrame()
-    i = 0
-    for file in os.listdir(TEST_PATH):
-        cur_path = os.path.join(TEST_PATH, file)
-        lidar_data = decode_lidar(cur_path)    
-        print (TEST_PATH+f'output{i}.csv')
-        lidar_data.to_csv(TEST_PATH+f'/output{i}.csv') #viewing in cloud compare
-        i = i+1
-        os.remove(cur_path)
-
+    # print(TEST_PATH[TEST_PATH.find('/'):])
+    record = TEST_PATH[TEST_PATH.find('/'):]
+    output_dir = f'RomanosConvertedLidar{record}'
+    makeAnOutput(output_dir)
+    print(LIGHT_BLUE + f"\nConvert ldo to csv from {TEST_PATH} to {output_dir}" + END)
+    # sys.exit()
+    for i, file in enumerate(sorted(os.listdir(TEST_PATH))):
         
-# if __name__ == "__main__" and TEST_PATH: 
-#     lidar_data = decode_lidar(TEST_PATH)
-#     lidar_data.to_csv('output.csv') #viewing in cloud compare
+        cur_path = os.path.join(TEST_PATH, file)
+        lidar_data = decode_lidar(cur_path) 
+        
+        output_path = os.path.join(output_dir, file)
+        output_path = output_path[:output_path.rfind('.')+1]+'csv'
 
-TEST_PATH = "/home/simteamq/Desktop/lidar-analysis/velodyne32e_21700001"
-if __name__ == "__main__" and TEST_PATH:
+        lidar_data.to_csv(output_path) #viewing in cloud compare
+        print(GREEN + f"Epoch number {i+1} : {output_path} been created successfully!" + END)
+        # os.remove(cur_path)
+    print('\n\n\n')
 
-    run(TEST_PATH=TEST_PATH)
+
+
+
+
+def main():
+    
+    # TEST_PATH = "/home/simteamq/Desktop/lidar-analysis/velodyne32e_21700001"
+    # TEST_PATH = "8 velodyne 28.5.24/664ef7aa8c2505002bd3728d/Velodyne_32E_Hatal110001"
+    
+    target_directory = "8 velodyne 28.5.24"
+    tests_pathes = [f'{target_directory}/{name}/Velodyne_32E_Hatal110001' for name in os.listdir(target_directory) if os.path.isdir(os.path.join(target_directory, name))]
+    
+    # makeAnOutput(directory_name = "RomanosConvertedLidar")
+
+    
+    for test_path in tests_pathes:
+        # print(test_path)
+        run(TEST_PATH=test_path)
+
+    
+
+    
+
+    # lidar_data = decode_lidar(TEST_PATH)
+    # lidar_data.to_csv('output.csv') #viewing in cloud compare
+    
+    """
     # lidar_filtered = pd.DataFrame()
     # maxium = -1
     # max_point = []
@@ -187,3 +268,12 @@ if __name__ == "__main__" and TEST_PATH:
 #     lidar_filtered['Y'] = y
 #     lidar_filtered['Z'] = z
 #     lidar_filtered.to_csv("filtered.csv")
+    """
+        
+
+if __name__ == "__main__":
+
+    main()
+    
+    
+    
